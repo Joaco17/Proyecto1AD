@@ -1,6 +1,8 @@
 package gestionficherosapp;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 
 import gestionficheros.FormatoVistas;
 import gestionficheros.GestionFicheros;
@@ -158,21 +160,58 @@ public class GestionFicherosImpl implements GestionFicheros {
 		try{
 			if(file.isDirectory()==true){
 				strBuilder.append("Directorio");
+			}else{
+				strBuilder.append("Fichero");
 			}
 		}
-		catch(){
+		catch(SecurityException e ){
 			
 		}
-		
+		strBuilder.append("\n");
 		
 		//Ubicación
+
+		strBuilder.append("Ubicacion: ");
+		strBuilder.append(file.getAbsolutePath());
+		strBuilder.append("\n");
+		
 		
 		//Fecha de última modificación
+		strBuilder.append("Ultima Modificación: ");
+		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+			
+		strBuilder.append(sdf.format(file.lastModified()));
+		strBuilder.append("\n");
 		
 		//Si es un fichero oculto o no
+		strBuilder.append("Oculto: ");
+		if(!file.isHidden()){
+			strBuilder.append("No");
+		}else{
+			strBuilder.append("Si");
+		}
+		strBuilder.append("\n");
+
+		
 		
 		//Si es directorio: Espacio libre, espacio disponible, espacio total
 		//bytes
+		
+		
+			if(file.isDirectory()==true){
+				strBuilder.append("Espacio total: ");
+				DecimalFormat formatea = new DecimalFormat("###,###.##");
+				strBuilder.append(formatea.format(file.getTotalSpace()));
+				strBuilder.append(" Bytes");
+				strBuilder.append("\n");
+				strBuilder.append("Espacio disponible: ");
+				strBuilder.append(formatea.format(file.getUsableSpace()));
+				strBuilder.append(" Bytes");
+				strBuilder.append("\n");
+				strBuilder.append("Espacio libre: ");
+				strBuilder.append(formatea.format(file.getFreeSpace()));
+				strBuilder.append(" Bytes");
+			}
 		
 		return strBuilder.toString();
 	}
