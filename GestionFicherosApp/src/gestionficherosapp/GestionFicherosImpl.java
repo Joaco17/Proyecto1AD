@@ -1,8 +1,13 @@
 package gestionficherosapp;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+
+import javax.swing.JOptionPane;
 
 import gestionficheros.FormatoVistas;
 import gestionficheros.GestionFicheros;
@@ -25,13 +30,13 @@ public class GestionFicherosImpl implements GestionFicheros {
 	private void actualiza() {
 
 		String[] ficheros = carpetaDeTrabajo.list(); // obtener los nombres
-		// calcular el número de filas necesario
+		// calcular el nï¿½mero de filas necesario
 		filas = ficheros.length / columnas;
 		if (filas * columnas < ficheros.length) {
-			filas++; // si hay resto necesitamos una fila más
+			filas++; // si hay resto necesitamos una fila mï¿½s
 		}
 
-		// dimensionar la matriz contenido según los resultados
+		// dimensionar la matriz contenido segï¿½n los resultados
 
 		contenido = new String[filas][columnas];
 		// Rellenar contenido con los nombres obtenidos
@@ -61,22 +66,79 @@ public class GestionFicherosImpl implements GestionFicheros {
 	@Override
 	public void creaCarpeta(String arg0) throws GestionFicherosException {
 		File file = new File(carpetaDeTrabajo,arg0);
-		//que se pueda escribir -> lanzará una excepción
-		//que no exista -> lanzará una excepción
-		//crear la carpeta -> lanzará una excepción
+		
+		//Comprobamos que  no existe y se tienen permisos
+		try{
+			if(file.exists()==false && carpetaDeTrabajo.canWrite()==true){
+					//Creamos el directorio
+					file.mkdir();
+					//Mostramos por consola la confirmaciÃ³n
+					System.out.println("Directorio creado correctamente.");
+			}
+			else{
+					//Si baja la ejecucion y se entra  aquÃ­, se muestra una ventanita informativa y se muestra un mensaje por consola
+					JOptionPane.showMessageDialog(null, "El directorio ya existe.");
+					System.err.println("No se pudo crear la carpeta.");
+			}
+		}
+		//Capturamos la excepcion en caso de que falle la creaciÃ³n del fichero
+		catch(SecurityException error){
+			System.err.println("Error al crear la carpeta.");
+		}
+		//Este metodo actualiza la lista de archivos de dicho directorio
 		actualiza();
 	}
 
 	@Override
 	public void creaFichero(String arg0) throws GestionFicherosException {
 		// TODO Auto-generated method stub
-
+		File file = new File(carpetaDeTrabajo,arg0);
+		
+		//Comprobamos que no existe y se tienen permisos
+				try{
+					if(file.exists()==false && carpetaDeTrabajo.canWrite()==true){
+							try {
+								//Creamos el nuevo fichero
+								file.createNewFile();
+								//Mostramos por consola la confirmaciÃ³n
+								System.out.println("Fichero creado correctamente.");
+							} 
+							catch (IOException error) {
+								System.err.println("No se ha podido crear el fichero");
+							}
+					}
+					else{
+							JOptionPane.showMessageDialog(null, "El fichero ya existe.");
+							System.err.println("No se pudo crear el fichero.");
+					}
+				}
+				//Capturamos la excepcion en caso de que falle la creaciÃ³n del fichero
+				catch(SecurityException error){
+					System.err.println("Error al crear el fichero.");
+				}
+				//Este metodo actualiza la lista de archivos de dicho directorio
+				actualiza();
 	}
 
 	@Override
 	public void elimina(String arg0) throws GestionFicherosException {
 		// TODO Auto-generated method stub
-
+		File file = new File(carpetaDeTrabajo, arg0);
+		
+		//Si existe el archivo, lo eliminamos.
+		try{
+			if(file.exists()==true && file.canWrite()==true){
+				//Eliminacion del fichero
+				file.delete();
+				//""
+				System.out.println("Archivo eliminado correctamente.");
+			}
+		}
+		catch(SecurityException error){
+			System.err.println("No se pudo eliminar dicho archivo.");
+		}
+		//Este metodo actualiza la lista de archivos de dicho directorio
+		actualiza();
 	}
 
 	@Override
@@ -93,7 +155,7 @@ public class GestionFicherosImpl implements GestionFicheros {
 			throw new GestionFicherosException("Alerta. No se puede acceder a "
 					+ file.getAbsolutePath() + ". No hay permiso");
 		}
-		// nueva asignación de la carpeta de trabajo
+		// nueva asignaciï¿½n de la carpeta de trabajo
 		carpetaDeTrabajo = file;
 		// se requiere actualizar contenido
 		actualiza();
@@ -143,75 +205,135 @@ public class GestionFicherosImpl implements GestionFicheros {
 		StringBuilder strBuilder=new StringBuilder();
 		File file = new File(carpetaDeTrabajo,arg0);
 		
-		//Controlar que existe. Si no, se lanzará una excepción
-		//Controlar que haya permisos de lectura. Si no, se lanzará una excepción
-		
-		//Título
-		strBuilder.append("INFORMACIÓN DEL SISTEMA");
-		strBuilder.append("\n\n");
-		
-		//Nombre
-		strBuilder.append("Nombre: ");
-		strBuilder.append(arg0);
-		strBuilder.append("\n");
-		
-		//Tipo: fichero o directorio
-		strBuilder.append("Tipo: ");
+		//Controlar que existe. Si no, se lanzarï¿½ una excepciï¿½n 
+		//Controlar que haya permisos de lectura. Si no, se lanzarï¿½ una excepciï¿½n
 		try{
-			if(file.isDirectory()==true){
-				strBuilder.append("Directorio");
-			}else{
-				strBuilder.append("Fichero");
+			if(file.exists()==true || file.canRead()==true){
+				
+				//Tï¿½tulo
+				strBuilder.append("INFORMACIï¿½N DEL SISTEMA");
+				strBuilder.append("\n\n");
+				
+				//Nombre
+				strBuilder.append("Nombre: ");
+				strBuilder.append(arg0);
+				strBuilder.append("\n");
+				
+				//Tipo: fichero o directorio
+				strBuilder.append("Tipo de archivo: ");
+				try{
+					if(file.isDirectory()==true){
+						strBuilder.append("Directorio");
+						strBuilder.append("\n");
+					}
+					else if(file.isFile()==true){
+						strBuilder.append("Fichero");
+						strBuilder.append("\n");
+					}
+				}
+				catch(SecurityException error){
+					System.err.println("Error al detectar el tipo de archivo.");
+				}
+					
+				//Ubicaciï¿½n
+				strBuilder.append("Ubicacion: ");
+				try{
+					String rutaCanonica = file.getCanonicalPath();
+					strBuilder.append(rutaCanonica);
+					strBuilder.append("\n");
+				}
+				catch(IOException error){
+					System.err.println("No se encuentra la ruta de dicho archivo.");
+				}
+				
+				//Fecha de ï¿½ltima modificaciï¿½n
+				strBuilder.append("Ultima modificacion: ");
+				try{
+					SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+					strBuilder.append(sdf.format(file.lastModified()));
+					strBuilder.append("\n");
+				}
+				catch(SecurityException  error){
+					System.err.println("Error al detectar la fecha de ultima modificacion de dicho fichero.");
+				}
+				
+				//Si es un fichero oculto o no
+				strBuilder.append("Oculto?: ");
+				try{
+					if(file.isHidden()){
+						strBuilder.append("No");
+						strBuilder.append("\n\n");
+					}
+					else{
+						strBuilder.append("Si");
+						strBuilder.append("\n\n");
+					}
+				}
+				catch(SecurityException error){
+					System.err.println("Error al detectar si el fichero es oculto o no.");
+				}
+				
+				//Si es directorio: Espacio libre, espacio disponible, espacio total
+				strBuilder.append("MAS INFORMACIï¿½N");
+				strBuilder.append("\n\n");
+				
+				try{
+					if(file.isFile()==true){
+						//Tamaï¿½o en bytes de el fichero seleccionado
+						strBuilder.append("TamaÃ±o: ");
+						
+						//formatea el numero de bits de manera correcta
+						DecimalFormat formatea = new DecimalFormat("###,###.##");
+						
+						
+						//Almacenamiento de datos en variable
+						Long tamaÃ±oBytes = file.length();
+						//Concatenacion a la cadena 
+						strBuilder.append(formatea.format(tamaÃ±oBytes)+" bytes");
+						strBuilder.append("\n");
+					}
+					else if(file.isDirectory()==true){
+						DecimalFormat formatea = new DecimalFormat("###,###.##");
+						
+						//Numero de elementos que contiene el directorio seleccionado
+						strBuilder.append("NÂº elementos: ");
+						Long numArchivos = file.length();
+						strBuilder.append(formatea.format(numArchivos)+" en total");
+						
+						//Salto de linea
+						strBuilder.append("\n");
+					
+						//Espacio libre del que consta el directorio seleccionado
+						strBuilder.append("Espacio libre: ");
+						Long espacioLibre = file.getFreeSpace();
+						strBuilder.append(formatea.format(espacioLibre)+" bytes libres");
+						
+						strBuilder.append("\n");
+						
+						//Espacio disponible
+						strBuilder.append("Espacio disponible: ");
+						Long espacioDisponible = file.getUsableSpace();
+						strBuilder.append(formatea.format(espacioDisponible)+" bytes disponibles");
+						
+						strBuilder.append("\n");
+						
+						//Espacio total
+						strBuilder.append("Espacio total: ");
+						Long espacioTotal = file.getTotalSpace();
+						strBuilder.append(formatea.format(espacioTotal)+" bytes de espacio total");
+						
+						strBuilder.append("\n");
+			
+					}
+				}
+				catch(RuntimeException error){
+					System.err.println("Error al detectar el tipo de archivo.");
+				}
 			}
 		}
-		catch(SecurityException e ){
-			
+		catch(RuntimeException error){
+			System.err.println("El archivo no existe o no tiene permisos de lectura.");
 		}
-		strBuilder.append("\n");
-		
-		//Ubicación
-
-		strBuilder.append("Ubicacion: ");
-		strBuilder.append(file.getAbsolutePath());
-		strBuilder.append("\n");
-		
-		
-		//Fecha de última modificación
-		strBuilder.append("Ultima Modificación: ");
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-			
-		strBuilder.append(sdf.format(file.lastModified()));
-		strBuilder.append("\n");
-		
-		//Si es un fichero oculto o no
-		strBuilder.append("Oculto: ");
-		if(!file.isHidden()){
-			strBuilder.append("No");
-		}else{
-			strBuilder.append("Si");
-		}
-		strBuilder.append("\n");
-
-		
-		
-		//Si es directorio: Espacio libre, espacio disponible, espacio total
-		//bytes
-		
-		
-			if(file.isDirectory()==true){
-				strBuilder.append("Espacio total: ");
-				DecimalFormat formatea = new DecimalFormat("###,###.##");
-				strBuilder.append(formatea.format(file.getTotalSpace()));
-				strBuilder.append(" Bytes");
-				strBuilder.append("\n");
-				strBuilder.append("Espacio disponible: ");
-				strBuilder.append(formatea.format(file.getUsableSpace()));
-				strBuilder.append(" Bytes");
-				strBuilder.append("\n");
-				strBuilder.append("Espacio libre: ");
-				strBuilder.append(formatea.format(file.getFreeSpace()));
-				strBuilder.append(" Bytes");
-			}
 		
 		return strBuilder.toString();
 	}
@@ -258,10 +380,24 @@ public class GestionFicherosImpl implements GestionFicheros {
 	}
 
 	@Override
-	public void renombra(String arg0, String arg1)
-			throws GestionFicherosException {
+	public void renombra(String arg0, String arg1) throws GestionFicherosException {
 		// TODO Auto-generated method stub
-
+		File file = new File(carpetaDeTrabajo,arg0);
+		//File con nuevo nombre
+		File file1 = new File(carpetaDeTrabajo, arg1);
+		//Renombrar el fichero en caso de que exista y tenga permisos de escritura
+		try{
+			if(file.exists()==true && file.canWrite()==true){
+						if(file.renameTo(file1)==true){
+							System.out.println("Archivo renombrado correctamente");
+						}
+					}
+		}
+		catch(SecurityException error){
+			System.err.println("No se pudo renombrar el archivo.");
+		}
+		//Este metodo actualiza la lista de archivos de dicho directorio
+		actualiza();
 	}
 
 	@Override
@@ -292,7 +428,7 @@ public class GestionFicherosImpl implements GestionFicheros {
 	public void setDirCarpeta(String arg0) throws GestionFicherosException {
 		File file = new File(arg0);
 
-		// se controla que la dirección exista y sea directorio
+		// se controla que la direcciï¿½n exista y sea directorio
 		if (!file.isDirectory()) {
 			throw new GestionFicherosException("Error. Se esperaba "
 					+ "un directorio, pero " + file.getAbsolutePath()
